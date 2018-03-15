@@ -84,68 +84,68 @@ int main(int argc, char **argv)
 // SIMULATION OF A SINGLE CYCLE cpu IS TRIVIAL - EACH INSTRUCTION IS EXECUTED
 // IN ONE CYCLE, EXCEPT IF THERE IS A CACHE MISS.
 
-	if (trace_view_on) printf("\n");
-	latency = cache_access(I_cache, tr_entry->PC, 0); /* simulate instruction fetch */
-	cycle_number = cycle_number + latency ;
+  if (trace_view_on) printf("\n");
+  latency = cache_access(I_cache, tr_entry->PC, 0); /* simulate instruction fetch */
+  cycle_number = cycle_number + latency ;
         I_accesses ++ ;
         if(latency > 0) I_misses ++ ;
 
       switch(tr_entry->type) {
         case ti_NOP:
-		  if (trace_view_on) printf("[cycle %d] NOP:", cycle_number);
+      if (trace_view_on) printf("[cycle %d] NOP:", cycle_number);
           break;
         case ti_RTYPE:
-		  if (trace_view_on) {
-			  printf("[cycle %d] RTYPE:", cycle_number);
-			  printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(dReg: %d) \n", tr_entry->PC, tr_entry->sReg_a, tr_entry->sReg_b, tr_entry->dReg);
-		  };
+      if (trace_view_on) {
+      printf("[cycle %d] RTYPE:", cycle_number);
+      printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(dReg: %d) \n", tr_entry->PC, tr_entry->sReg_a, tr_entry->sReg_b, tr_entry->dReg);
+      };
           break;
         case ti_ITYPE:
-		  if (trace_view_on){
-			  printf("[cycle %d] ITYPE:", cycle_number);
-			  printf(" (PC: %x)(sReg_a: %d)(dReg: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->dReg, tr_entry->Addr);
-		  };
+      if (trace_view_on){
+      printf("[cycle %d] ITYPE:", cycle_number);
+      printf(" (PC: %x)(sReg_a: %d)(dReg: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->dReg, tr_entry->Addr);
+      };
           break;
         case ti_LOAD:
-		  if (trace_view_on){
-			printf("[cycle %d] LOAD:", cycle_number);
-			printf(" (PC: %x)(sReg_a: %d)(dReg: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->dReg, tr_entry->Addr);
-		  };
-		  latency = cache_access(D_cache, tr_entry->Addr, 0);
-		  cycle_number = cycle_number + latency ;
-		  D_read_accesses ++ ;
-		  if (latency > 0) D_read_misses ++ ;
-		  break;
+      if (trace_view_on){
+      printf("[cycle %d] LOAD:", cycle_number);
+      printf(" (PC: %x)(sReg_a: %d)(dReg: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->dReg, tr_entry->Addr);
+      };
+      latency = cache_access(D_cache, tr_entry->Addr, 0);
+      cycle_number = cycle_number + latency ;
+      D_read_accesses ++ ;
+      if (latency > 0) D_read_misses ++ ;
+      break;
         case ti_STORE:
-		  if (trace_view_on){
-			printf("[cycle %d] STORE:", cycle_number);
-			printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->sReg_b, tr_entry->Addr);
-		  };
-		  latency = cache_access(D_cache, tr_entry->Addr, 1);
-		  cycle_number = cycle_number + latency ;
-		  D_write_accesses ++ ;
-		  if (latency > 0) D_write_misses ++ ;
-		  break;
+      if (trace_view_on){
+      printf("[cycle %d] STORE:", cycle_number);
+      printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->sReg_b, tr_entry->Addr);
+      };
+      latency = cache_access(D_cache, tr_entry->Addr, 1);
+      cycle_number = cycle_number + latency ;
+      D_write_accesses ++ ;
+      if (latency > 0) D_write_misses ++ ;
+      break;
         case ti_BRANCH:
-		  if (trace_view_on) {
-			printf("[cycle %d] BRANCH:", cycle_number);
-			printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->sReg_b, tr_entry->Addr);
-		  };
+      if (trace_view_on) {
+      printf("[cycle %d] BRANCH:", cycle_number);
+      printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->sReg_b, tr_entry->Addr);
+      };
           break;
         case ti_JTYPE:
-		  if (trace_view_on) {
-			printf("[cycle %d] JTYPE:", cycle_number);
-			printf(" (PC: %x)(addr: %x)\n", tr_entry->PC, tr_entry->Addr);
-		  };
+      if (trace_view_on) {
+      printf("[cycle %d] JTYPE:", cycle_number);
+      printf(" (PC: %x)(addr: %x)\n", tr_entry->PC, tr_entry->Addr);
+      };
           break;
         case ti_SPECIAL:
-		  if (trace_view_on) printf("[cycle %d] SPECIAL:", cycle_number);
+      if (trace_view_on) printf("[cycle %d] SPECIAL:", cycle_number);
           break;
         case ti_JRTYPE:
-		  if (trace_view_on) {
-			printf("[cycle %d] JRTYPE:", cycle_number);
-			printf(" (PC: %x) (sReg_a: %d)(addr: %x)\n", tr_entry->PC, tr_entry->dReg, tr_entry->Addr);
-		  };
+      if (trace_view_on) {
+      printf("[cycle %d] JRTYPE:", cycle_number);
+      printf(" (PC: %x) (sReg_a: %d)(addr: %x)\n", tr_entry->PC, tr_entry->dReg, tr_entry->Addr);
+      };
           break;
       }
    

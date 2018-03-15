@@ -10,6 +10,14 @@
 #include <arpa/inet.h>
 #include "CPU.h" 
 
+// to keep cache statistics
+unsigned int I_accesses = 0;
+unsigned int I_misses = 0;
+unsigned int D_read_accesses = 0;
+unsigned int D_read_misses = 0;
+unsigned int D_write_accesses = 0; 
+unsigned int D_write_misses = 0;
+
 #define BP_ENTRIES 64     // size of branch predictor table
 
 
@@ -196,6 +204,31 @@ int main(int argc, char **argv)
   unsigned char t_dReg= 0;
   unsigned int t_PC = 0;
   unsigned int t_Addr = 0;
+
+  //open the cache file
+  FILE *cache_file;
+  cache_file = fopen("cache_config.txt", "r");
+  unsigned int I_size = 0; 
+  unsigned int I_assoc = 0; 
+  unsigned int D_size = 0;
+  unsigned int D_assoc = 0;
+  unsigned int L2_size = 0;
+  unsigned int L2_assoc = 0;
+  unsigned int bsize = 0;
+  unsigned int L2_latency = 0;
+  unsigned int mem_time = 0;
+
+  //read in the parameters
+  fscanf(cache_file, "%d", &I_size);
+  fscanf(cache_file, "%d", &I_assoc);
+  fscanf(cache_file, "%d", &D_size);
+  fscanf(cache_file, "%d", &D_assoc);
+  fscanf(cache_file, "%d", &L2_size);
+  fscanf(cache_file, "%d", &L2_assoc);
+  fscanf(cache_file, "%d", &bsize);
+  fscanf(cache_file, "%d", &L2_latency);
+  fscanf(cache_file, "%d", &mem_time);
+  fclose(cache_file);
 
   //read the inputs
   if(argc == 2){
@@ -458,11 +491,15 @@ int main(int argc, char **argv)
   	
   }
 
-  printf("\nSimulation terminates at cycle: %u \n\n", cycle_number);
+  printf("\nSimulation terminates at cycle: %u \n", cycle_number);
+
+  //print the total number of memory accesses
+  int total_accesses = I_accesses + D_write_accesses + D_write_accesses;
+  printf("\nNumber of memory accesses: %u\n\n", total_accesses);
 
   //**********************************************************************
   // debugging helpers
-  printf("\nNumber of branch table misses: %d \n\n", misses);
+  //printf("\nNumber of branch table misses: %d \n\n", misses);
 
   // //print the branch predition table
   // printf("Branch Table printed below for debugging\n");
