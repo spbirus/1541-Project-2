@@ -71,6 +71,9 @@ int cache_access(struct cache_t *cp, unsigned long address, int access_type)
   block_address = (address / cp->blocksize);
   tag = block_address / cp->nsets;
   index = block_address - (tag * cp->nsets) ;
+  // printf(" block_address %d", block_address);
+  // printf(" tag %d", tag);
+  // printf(" index %d", index);
 
   latency = 0;
   for (i = 0; i < cp->assoc; i++) { /* look for the requested block */
@@ -80,13 +83,13 @@ int cache_access(struct cache_t *cp, unsigned long address, int access_type)
         cp->blocks[index][i].dirty = 1;
       }
       printf("\na cache hit");
-      printf("At address %lu and index %d", address, index);
+      printf(" at index %d with tag %d",  index, tag);
       return(latency);          /* a cache hit */
     }
   }
   /* a cache miss */
   printf("\na cache miss");
-  printf("At address %lu and index %d", address, index);
+  printf(" at index %d with tag %d",  index, tag);
   for (way=0 ; way< cp->assoc ; way++)    /* look for an invalid entry */
       if (cp->blocks[index][way].valid == 0) {
         latency = latency + cp->mem_latency;  /* account for reading the block from memory*/
