@@ -9,6 +9,7 @@
 #include <inttypes.h>
 #include <arpa/inet.h>
 #include "CPU.h" 
+#include "cache.h"
 
 // to keep cache statistics
 unsigned int I_accesses = 0;
@@ -289,8 +290,11 @@ int main(int argc, char **argv)
   set_instr_to_noop(wb_stage);
 
   
-
-  //TODO do we need branch table stuff????? if so initialize here I guess
+  //initialize the L1 caches
+  //create the instruction L1 cache
+  cache_create(I_size, bsize, I_assoc, mem_time); //don't know if mem_time is the right variable to throw in here
+  //create the mem L1 cache
+  cache_create(D_size, bsize, D_assoc, mem_time); //don't know if mem_time is the right variable to throw in here
 
 
   //loop while there are still instructions left
@@ -434,14 +438,11 @@ int main(int argc, char **argv)
 
   			//get next instr, if none decrement the instr_left
   			if(!trace_get_item(&new_instr)){
-          //get next instr, if none decrement the instr_left
-          instr_left -= 1;
-          set_instr_to_noop(new_instr);
-          //fprintf(stdout, "instructinos left: %d \n", instr_left);
-
-
-        }
-
+          		//get next instr, if none decrement the instr_left
+          		instr_left -= 1;
+          		set_instr_to_noop(new_instr);
+          		//fprintf(stdout, "instructinos left: %d \n", instr_left);
+        	}
   			break;
 
   		case 1: //structural hazard
@@ -472,14 +473,14 @@ int main(int argc, char **argv)
   			if1_stage = new_instr;
 
   			
-        if(remove_queue_instr(new_instr)){
-          //need to add three "squashed" instructions afterward to get correct cycle time
-          //ADD CODE HERE
-        }else if(!trace_get_item(&new_instr)){
-          //get next instr, if none decrement the instr_left
-  				instr_left -= 1;
-  				set_instr_to_noop(new_instr);
-          //fprintf(stdout, "instructinos left: %d \n", instr_left);
+	        if(remove_queue_instr(new_instr)){
+	          //need to add three "squashed" instructions afterward to get correct cycle time
+	          //ADD CODE HERE
+	        }else if(!trace_get_item(&new_instr)){
+	          //get next instr, if none decrement the instr_left
+	  				instr_left -= 1;
+	  				set_instr_to_noop(new_instr);
+	          //fprintf(stdout, "instructinos left: %d \n", instr_left);
 
   			}
 
