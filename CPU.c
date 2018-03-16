@@ -291,10 +291,12 @@ int main(int argc, char **argv)
 
   
   //initialize the L1 caches
+  struct cache_create *instr_cache;
+  struct cache_create *data_cache;
   //create the instruction L1 cache
-  cache_create(I_size, bsize, I_assoc, mem_time); //don't know if mem_time is the right variable to throw in here
+  instr_cache = cache_create(I_size, bsize, I_assoc, mem_time); //don't know if mem_time is the right variable to throw in here
   //create the mem L1 cache
-  cache_create(D_size, bsize, D_assoc, mem_time); //don't know if mem_time is the right variable to throw in here
+  data_cache = cache_create(D_size, bsize, D_assoc, mem_time); //don't know if mem_time is the right variable to throw in here
 
 
   //loop while there are still instructions left
@@ -427,10 +429,25 @@ int main(int argc, char **argv)
   	mem1_stage = ex_stage;
 
 
+  	int latency;
   	//hazard switching
   	switch(hazard){
   		case 0: //no hazard
-  			//TODO
+  			latency = cache_access(instr_cache, new_instr->Addr, 0);
+  			I_accesses++; //increment the instruction accesses
+            //hit -> latency = 0
+            //miss -> latency value varies based on memory (have to stall)
+                //maybe use a while loop with repeated print("waiting") statements
+            if(latency > 0){
+            	I_misses++; //increment the insctruction misses when the latency is anything greater than 0
+            	int i;
+            	for( i = 0; i<latency; i++) {
+            		//used to wait so many times while the instruction is fetching from memory or L2 cache
+                	printf("\nWaiting on cache...");
+            	}
+            }
+            
+            
   			ex_stage = id_stage;
   			id_stage = if2_stage;
   			if2_stage = if1_stage;
@@ -497,6 +514,7 @@ int main(int argc, char **argv)
   //print the total number of memory accesses
   int total_accesses = I_accesses + D_write_accesses + D_write_accesses;
   printf("\nNumber of memory accesses: %u\n\n", total_accesses);
+  printf("\ninstruction misses: %d\n", I_misses);
 
   //**********************************************************************
   // debugging helpers
