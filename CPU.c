@@ -291,12 +291,15 @@ int main(int argc, char **argv)
 
   
   //initialize the L1 caches
-  struct cache_create *instr_cache;
-  struct cache_create *data_cache;
+  struct cache_L1_create *instr_cache;
+  struct cache_L1_create *data_cache;
+  struct cache_L2_create *L2_cache;
   //create the instruction L1 cache
-  instr_cache = cache_create(I_size, bsize, I_assoc, mem_time); //don't know if mem_time is the right variable to throw in here
+  instr_cache = cache_L1_create(I_size, bsize, I_assoc, mem_time); //don't know if mem_time is the right variable to throw in here
   //create the mem L1 cache
-  data_cache = cache_create(D_size, bsize, D_assoc, mem_time); //don't know if mem_time is the right variable to throw in here
+  data_cache = cache_L1_create(D_size, bsize, D_assoc, mem_time); //don't know if mem_time is the right variable to throw in here
+  //create the unified L2 cache
+  L2_cache = cache_L2_create(L2_size, bsize, L2_assoc, L2_latency);
 
 
   //loop while there are still instructions left
@@ -432,7 +435,7 @@ int main(int argc, char **argv)
       //Loading == reading??
       //printf("\nDATA CACHE READING\n");
       //print_finished_instr(mem1_stage, 0);
-      latency = cache_access(data_cache, mem1_stage->Addr, 0); //not sure if we need dReg or something else
+      latency = cache_access(data_cache, L2_cache, mem1_stage->Addr, 0); //not sure if we need dReg or something else
   	  D_read_accesses++; //increment the data read accesses
       //hit -> latency = 0
       //miss -> latency value varies based on memory (have to stall)
@@ -450,7 +453,7 @@ int main(int argc, char **argv)
       //Storing == writing??
       //printf("\nDATA CACHE WRITING\n");
       //print_finished_instr(mem1_stage, 0);
-      latency = cache_access(data_cache, mem1_stage->Addr, 1); //not sure if we need dReg or something else
+      latency = cache_access(data_cache, L2_cache, mem1_stage->Addr, 1); //not sure if we need dReg or something else
       D_write_accesses++; //increment the data read accesses
       //hit -> latency = 0
       //miss -> latency value varies based on memory (have to stall)
@@ -494,9 +497,9 @@ int main(int argc, char **argv)
         	int i;
         	for( i = 0; i<latency; i++) {
         		//used to wait so many times while the instruction is fetching from memory or L2 cache
-            if(trace_view_on){
-              printf("\nWaiting on instruction cache...");
-            }
+	            if(trace_view_on){
+	              printf("\nWaiting on instruction cache...");
+	            }
         	}
         }
         //-------------------------------------------------------
@@ -512,7 +515,6 @@ int main(int argc, char **argv)
           		//get next instr, if none decrement the instr_left
           		instr_left -= 1;
           		set_instr_to_noop(new_instr);
-          		//fprintf(stdout, "instructinos left: %d \n", instr_left);
         	}
   			break;
 
@@ -541,22 +543,22 @@ int main(int argc, char **argv)
 
   			//-------------------------------------------------------
   			//check the L1 instruction cache
-  			latency = cache_access(instr_cache, new_instr->Addr, 1); //TODO: when do we want to write vs. when do we want to read??
+  			latency = cache_access(instr_cache, L2_cache, new_instr->Addr, 1); //TODO: when do we want to write vs. when do we want to read??
   			I_accesses++; //increment the instruction accesses
-        //hit -> latency = 0
-        //miss -> latency value varies based on memory (have to stall)
-            //maybe use a while loop with repeated print("waiting") statements
-        if(latency > 0){
-        	I_misses++; //increment the insctruction misses when the latency is anything greater than 0
-        	int i;
-        	for( i = 0; i<latency; i++) {
-        		//used to wait so many times while the instruction is fetching from memory or L2 cache
-            if(trace_view_on){
-              printf("\nWaiting on instruction cache...");
-            }
-        	}
-        }
-        //-------------------------------------------------------
+	        //hit -> latency = 0
+	        //miss -> latency value varies based on memory (have to stall)
+	            //maybe use a while loop with repeated print("waiting") statements
+	        if(latency > 0){
+	        	I_misses++; //increment the insctruction misses when the latency is anything greater than 0
+	        	int i;
+	        	for( i = 0; i<latency; i++) {
+	        		//used to wait so many times while the instruction is fetching from memory or L2 cache
+		            if(trace_view_on){
+		              printf("\nWaiting on instruction cache...");
+		            }
+	        	}
+	        }
+	        //-------------------------------------------------------
 
   			ex_stage = id_stage;
   			id_stage = if2_stage;
