@@ -430,9 +430,9 @@ int main(int argc, char **argv)
     //check the L1 data cache
     if(mem1_stage->type == ti_LOAD){
       //Loading == reading??
-      printf("\nDATA CACHE READING\n");
-      print_finished_instr(mem1_stage, 0000000000000000);
-      latency = cache_access(data_cache, mem1_stage->sReg_b, 0); //not sure if we need dReg or something else
+      //printf("\nDATA CACHE READING\n");
+      //print_finished_instr(mem1_stage, 0);
+      latency = cache_access(data_cache, mem1_stage->Addr, 0); //not sure if we need dReg or something else
   	  D_read_accesses++; //increment the data read accesses
       //hit -> latency = 0
       //miss -> latency value varies based on memory (have to stall)
@@ -448,9 +448,9 @@ int main(int argc, char **argv)
       }
     }else if(mem1_stage->type == ti_STORE){
       //Storing == writing??
-      printf("\nDATA CACHE WRITING\n");
-      print_finished_instr(mem1_stage, 111111111111111);
-      latency = cache_access(data_cache, mem1_stage->sReg_b, 1); //not sure if we need dReg or something else
+      //printf("\nDATA CACHE WRITING\n");
+      //print_finished_instr(mem1_stage, 0);
+      latency = cache_access(data_cache, mem1_stage->Addr, 1); //not sure if we need dReg or something else
       D_write_accesses++; //increment the data read accesses
       //hit -> latency = 0
       //miss -> latency value varies based on memory (have to stall)

@@ -87,10 +87,11 @@ int cache_access(struct cache_t *cp, unsigned long address, int access_type)
       return(latency);          /* a cache hit */
     }
   }
+  
   /* a cache miss */
   printf("\na cache miss");
   printf(" at index %d with tag %d",  index, tag);
-  for (way=0 ; way< cp->assoc ; way++)    /* look for an invalid entry */
+  for (way=0 ; way< cp->assoc ; way++){  /* look for an invalid entry */
       if (cp->blocks[index][way].valid == 0) {
         latency = latency + cp->mem_latency;  /* account for reading the block from memory*/
                     /* should instead read from L2, in case you have an L2 */
@@ -104,23 +105,26 @@ int cache_access(struct cache_t *cp, unsigned long address, int access_type)
         printf("\n\tan invalid entry is available");
         return(latency);        /* an invalid entry is available*/
       }
+  }
 
-      max = cp->blocks[index][0].LRU ;  /* find the LRU block */
-      way = 0 ;
-      for (i=1 ; i< cp->assoc ; i++)  
-      if (cp->blocks[index][i].LRU > max) {
-        max = cp->blocks[index][i].LRU ;
-        way = i ;
-      }
-      if (cp->blocks[index][way].dirty == 1)  
-        latency = latency + cp->mem_latency;  /* for writing back the evicted block */
-      latency = latency + cp->mem_latency;    /* for reading the block from memory*/
-          /* should instead write to and/or read from L2, in case you have an L2 */
-      cp->blocks[index][way].tag = tag ;
-      updateLRU(cp, index, way) ;
-      cp->blocks[index][i].dirty = 0 ;
-      if(access_type == 1) { //write
-        cp->blocks[index][i].dirty = 1 ;
-      }
-      return(latency);
+  max = cp->blocks[index][0].LRU ;  /* find the LRU block */
+  way = 0 ;
+  for (i=1 ; i< cp->assoc ; i++){
+    if (cp->blocks[index][i].LRU > max) {
+      max = cp->blocks[index][i].LRU ;
+      way = i ;
+    }
+  }
+  if (cp->blocks[index][way].dirty == 1){ 
+    latency = latency + cp->mem_latency; /* for writing back the evicted block */
+  } 
+  latency = latency + cp->mem_latency;    /* for reading the block from memory*/
+      /* should instead write to and/or read from L2, in case you have an L2 */
+  cp->blocks[index][way].tag = tag ;
+  updateLRU(cp, index, way) ;
+  cp->blocks[index][i].dirty = 0 ;
+  if(access_type == 1) { //write
+    cp->blocks[index][i].dirty = 1 ;
+  }
+  return(latency);
 }
