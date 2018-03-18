@@ -426,20 +426,48 @@ int main(int argc, char **argv)
     int latency;
 
     //-------------------------------------------------------
+    //SHOULD THIS SECTION GO HERE?????? OR BELOW THE MOVING OF THE WB, MEM1, MEM2, AND EX STAGES A COUPLE LINES BELOW????? 
     //check the L1 data cache
-    latency = cache_access(data_cache, new_instr->Addr, 0); //TODO: when do we want to write vs. when do we want to read??
-	D_read_accesses //increment the data read accesses
-    //hit -> latency = 0
-    //miss -> latency value varies based on memory (have to stall)
-    if(latency > 0){
-    	D_read_misses++; //increment the insctruction misses when the latency is anything greater than 0
-    	int i;
-    	for( i = 0; i<latency; i++) {
-    		//used to wait so many times while the instruction is fetching from memory or L2 cache
-        	//printf("\nWaiting on data cache...");
-    	}
+    if(mem1_stage->type == ti_LOAD){
+      //Loading == reading??
+      printf("\nDATA CACHE READING\n");
+      print_finished_instr(mem1_stage, 0000000000000000);
+      latency = cache_access(data_cache, mem1_stage->sReg_b, 0); //not sure if we need dReg or something else
+  	  D_read_accesses++; //increment the data read accesses
+      //hit -> latency = 0
+      //miss -> latency value varies based on memory (have to stall)
+      if(latency > 0){
+      	D_read_misses++; //increment the data read misses when the latency is anything greater than 0
+      	int i;
+      	for( i = 0; i<latency; i++) {
+      		//used to wait so many times while the data is fetching from memory or L2 cache
+          if(trace_view_on){
+          	printf("\nWaiting on reading data cache...");
+          }
+      	}
+      }
+    }else if(mem1_stage->type == ti_STORE){
+      //Storing == writing??
+      printf("\nDATA CACHE WRITING\n");
+      print_finished_instr(mem1_stage, 111111111111111);
+      latency = cache_access(data_cache, mem1_stage->sReg_b, 1); //not sure if we need dReg or something else
+      D_write_accesses++; //increment the data read accesses
+      //hit -> latency = 0
+      //miss -> latency value varies based on memory (have to stall)
+      if(latency > 0){
+        D_write_misses++; //increment the data read misses when the latency is anything greater than 0
+        int i;
+        for( i = 0; i<latency; i++) {
+          //used to wait so many times while the data is fetching from memory or L2 cache
+          if(trace_view_on){
+            printf("\nWaiting on writing data cache...");
+          }
+        }
+      }
     }
     //-------------------------------------------------------
+
+
 
 
     //moved these here since they are common across all hazards
@@ -459,17 +487,19 @@ int main(int argc, char **argv)
   						//TODO: when do we want to write vs. when do we want to read?? 
   						//I think instr_cache is always read and data_cache will be read or write
   			I_accesses++; //increment the instruction accesses
-            //hit -> latency = 0
-            //miss -> latency value varies based on memory (have to stall)
-            if(latency > 0){
-            	I_misses++; //increment the insctruction misses when the latency is anything greater than 0
-            	int i;
-            	for( i = 0; i<latency; i++) {
-            		//used to wait so many times while the instruction is fetching from memory or L2 cache
-                	//printf("\nWaiting on instruction cache...");
-            	}
+        //hit -> latency = 0
+        //miss -> latency value varies based on memory (have to stall)
+        if(latency > 0){
+        	I_misses++; //increment the insctruction misses when the latency is anything greater than 0
+        	int i;
+        	for( i = 0; i<latency; i++) {
+        		//used to wait so many times while the instruction is fetching from memory or L2 cache
+            if(trace_view_on){
+              printf("\nWaiting on instruction cache...");
             }
-            //-------------------------------------------------------
+        	}
+        }
+        //-------------------------------------------------------
 
             
   			ex_stage = id_stage;
@@ -513,18 +543,20 @@ int main(int argc, char **argv)
   			//check the L1 instruction cache
   			latency = cache_access(instr_cache, new_instr->Addr, 1); //TODO: when do we want to write vs. when do we want to read??
   			I_accesses++; //increment the instruction accesses
-            //hit -> latency = 0
-            //miss -> latency value varies based on memory (have to stall)
-                //maybe use a while loop with repeated print("waiting") statements
-            if(latency > 0){
-            	I_misses++; //increment the insctruction misses when the latency is anything greater than 0
-            	int i;
-            	for( i = 0; i<latency; i++) {
-            		//used to wait so many times while the instruction is fetching from memory or L2 cache
-                	//printf("\nWaiting on cache...");
-            	}
+        //hit -> latency = 0
+        //miss -> latency value varies based on memory (have to stall)
+            //maybe use a while loop with repeated print("waiting") statements
+        if(latency > 0){
+        	I_misses++; //increment the insctruction misses when the latency is anything greater than 0
+        	int i;
+        	for( i = 0; i<latency; i++) {
+        		//used to wait so many times while the instruction is fetching from memory or L2 cache
+            if(trace_view_on){
+              printf("\nWaiting on instruction cache...");
             }
-            //-------------------------------------------------------
+        	}
+        }
+        //-------------------------------------------------------
 
   			ex_stage = id_stage;
   			id_stage = if2_stage;
@@ -551,12 +583,15 @@ int main(int argc, char **argv)
   	
   }
 
-  printf("\nSimulation terminates at cycle: %u \n", cycle_number);
+  printf("\n\n\nSimulation terminates at cycle: %u \n", cycle_number);
 
   //print the total number of memory accesses
   int total_accesses = I_accesses + D_write_accesses + D_write_accesses;
-  printf("\nNumber of memory accesses: %u\n", total_accesses);
-  printf("\ninstruction misses: %d\n", I_misses);
+  printf("Number of memory accesses: %d\n", total_accesses);
+  printf("\tI_accesses: %d  D_write_accesses %d  D_read_accesses %d \n", I_accesses, D_write_accesses, D_read_accesses);
+  printf("instruction misses: %d\n", I_misses);
+  printf("data read misses: %d\n", D_read_misses);
+  printf("data write misses: %d\n",D_write_misses);
 
   //**********************************************************************
   // debugging helpers
