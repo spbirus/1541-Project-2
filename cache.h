@@ -25,7 +25,7 @@ struct cache_t * cache_L1_create(int size, int blocksize, int assoc, int mem_lat
   printf("\nCreate the L1 cache... ");
   printf("Cache size: %dKB... ", size);
   printf("Blocksize: %dB... ", blocksize);
-  printf("Associativity: %d", assoc);
+  printf("Associativity: %d... ", assoc);
   printf("Memory Latency: %d", mem_latency);
   int i, nblocks , nsets ;
   struct cache_t *C = (struct cache_t *)calloc(1, sizeof(struct cache_t));
@@ -50,10 +50,15 @@ struct cache_t * cache_L2_create(int size, int blocksize, int assoc, int mem_lat
   printf("\nCreate the L2 cache... ");
   printf("Cache size: %dKB... ", size);
   printf("Blocksize: %dB... ", blocksize);
-  printf("Associativity: %d", assoc);
-  printf("Memory Latency: %d", mem_latency);
+  printf("Associativity: %d... ", assoc);
+  printf("Memory Latency: %d... ", mem_latency);
   int i, nblocks , nsets ;
   struct cache_t *C = (struct cache_t *)calloc(1, sizeof(struct cache_t));
+  
+  if (assoc == 0) {
+	printf("L2 cache created successfully");
+	return C;
+  }
     
   nblocks = size *1024 / blocksize ;// number of blocks in the cache
   nsets = nblocks / assoc ;     // number of sets (entries) in the cache
@@ -67,6 +72,7 @@ struct cache_t * cache_L2_create(int size, int blocksize, int assoc, int mem_lat
   for(i = 0; i < nsets; i++) {
     C->blocks[i] = (struct cache_blk_t *)calloc(assoc, sizeof(struct cache_blk_t));
   }
+  printf("L2 cache created successfully");
   return C;
 }
 
