@@ -14,10 +14,15 @@
 // to keep cache statistics
 unsigned int I_accesses = 0;
 unsigned int I_misses = 0;
+unsigned int I_hits = 0;
 unsigned int D_read_accesses = 0;
 unsigned int D_read_misses = 0;
 unsigned int D_write_accesses = 0; 
 unsigned int D_write_misses = 0;
+unsigned int D_hits = 0;
+unsigned int L2_accesses = 0;
+unsigned int L2_misses = 0;
+unsigned int L2_hits = 0;
 
 #define BP_ENTRIES 64     // size of branch predictor table
 
@@ -301,7 +306,7 @@ int main(int argc, char **argv)
   //create the unified L2 cache
   L2_cache = cache_L2_create(L2_size, bsize, L2_assoc, L2_latency);
   printf("\nWe made the caches now\n");
-  getchar();
+ 
 
   //loop while there are still instructions left
   int instr_left = 8;
@@ -436,7 +441,7 @@ int main(int argc, char **argv)
       //Loading == reading??
       //printf("\nDATA CACHE READING\n");
       //print_finished_instr(mem1_stage, 0);
-      latency = cache_access(data_cache, L2_cache, mem1_stage->Addr, 0); //not sure if we need dReg or something else
+      latency = cache_access(data_cache, L2_cache, mem1_stage->Addr, 0); 
   	  D_read_accesses++; //increment the data read accesses
       //hit -> latency = 0
       //miss -> latency value varies based on memory (have to stall)
@@ -449,6 +454,8 @@ int main(int argc, char **argv)
           	printf("\nWaiting on reading data cache...");
           }
       	}
+      }else{
+        D_hits++;
       }
     }else if(mem1_stage->type == ti_STORE){
       //Storing == writing??
@@ -467,6 +474,8 @@ int main(int argc, char **argv)
             printf("\nWaiting on writing data cache...");
           }
         }
+      }else{
+        D_hits++;
       }
     }
     //-------------------------------------------------------
@@ -502,6 +511,8 @@ int main(int argc, char **argv)
 	              printf("\nWaiting on instruction cache...");
 	            }
         	}
+        }else{
+          I_hits++;
         }
         //-------------------------------------------------------
 
@@ -558,7 +569,9 @@ int main(int argc, char **argv)
 		              printf("\nWaiting on instruction cache...");
 		            }
 	        	}
-	        }
+	        }else{
+            I_hits++;
+          }
 	        //-------------------------------------------------------
 
   			ex_stage = id_stage;
@@ -595,6 +608,11 @@ int main(int argc, char **argv)
   printf("instruction misses: %d\n", I_misses);
   printf("data read misses: %d\n", D_read_misses);
   printf("data write misses: %d\n",D_write_misses);
+
+  int D_misses = D_write_misses+D_read_misses;
+  printf("\nL1 Data cache: [%d] accesses, [%d] hits, [%d] misses, [%.2f%] miss rate", D_write_accesses+D_read_accesses, D_hits,D_write_misses+D_read_misses, (double)100*(D_misses)/(D_hits+D_misses));
+  printf("\nL1 Instruction cache: [%d] accesses, [%d] hits, [%d] misses, [%.2f%] miss rate", I_accesses, I_hits, I_misses, (double)100*(I_misses)/I_accesses);
+  printf("\nL2 cache: [%d] accesses, [%d] hits, [%d] misses, [%.2f%] miss rate\n\n", L2_accesses, L2_hits, L2_misses, (double)100*(L2_misses)/L2_accesses);
 
   //**********************************************************************
   // debugging helpers

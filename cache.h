@@ -22,42 +22,42 @@ struct cache_t {
 
 struct cache_t * cache_L1_create(int size, int blocksize, int assoc, int mem_latency)
 {
-  printf("\nCreate the L1 cache... ");
-  printf("Cache size: %dKB... ", size);
-  printf("Blocksize: %dB... ", blocksize);
-  printf("Associativity: %d... ", assoc);
-  printf("Memory Latency: %d", mem_latency);
-  int i, nblocks , nsets ;
-  struct cache_t *C = (struct cache_t *)calloc(1, sizeof(struct cache_t));
-    
-  nblocks = size *1024 / blocksize ;// number of blocks in the cache
-  nsets = nblocks / assoc ;     // number of sets (entries) in the cache
-  C->blocksize = blocksize ;
-  C->nsets = nsets  ; 
-  C->assoc = assoc;
-  C->mem_latency = mem_latency;
+	printf("\nCreate the L1 cache... ");
+	printf("Cache size: %dKB ", size);
+	printf("Blocksize: %dB ", blocksize);
+	printf("Associativity: %d ", assoc);
+	printf("Memory Latency: %d ", mem_latency);
+	int i, nblocks , nsets ;
+	struct cache_t *C = (struct cache_t *)calloc(1, sizeof(struct cache_t));
 
-  C->blocks= (struct cache_blk_t **)calloc(nsets, sizeof(struct cache_blk_t *));
+	nblocks = size *1024 / blocksize ;// number of blocks in the cache
+	nsets = nblocks / assoc ;     // number of sets (entries) in the cache
+	C->blocksize = blocksize ;
+	C->nsets = nsets  ; 
+	C->assoc = assoc;
+	C->mem_latency = mem_latency;
 
-  for(i = 0; i < nsets; i++) {
-    C->blocks[i] = (struct cache_blk_t *)calloc(assoc, sizeof(struct cache_blk_t));
-  }
-  return C;
+	C->blocks= (struct cache_blk_t **)calloc(nsets, sizeof(struct cache_blk_t *));
+
+	for(i = 0; i < nsets; i++) {
+		C->blocks[i] = (struct cache_blk_t *)calloc(assoc, sizeof(struct cache_blk_t));
+	}
+	return C;
 }
 
 
 struct cache_t * cache_L2_create(int size, int blocksize, int assoc, int mem_latency){
-  printf("\nCreate the L2 cache... ");
-  printf("Cache size: %dKB... ", size);
-  printf("Blocksize: %dB... ", blocksize);
-  printf("Associativity: %d... ", assoc);
-  printf("Memory Latency: %d... ", mem_latency);
+  printf("\nCreate the L2 cache ");
+  printf("Cache size: %dKB ", size);
+  printf("Blocksize: %dB ", blocksize);
+  printf("Associativity: %d ", assoc);
+  printf("Memory Latency: %d ", mem_latency);
   int i, nblocks , nsets ;
   struct cache_t *C = (struct cache_t *)calloc(1, sizeof(struct cache_t));
   
-  if (assoc == 0) {
-	printf("L2 cache created successfully");
-	return C;
+  if (size == 0) {
+    printf("\nL2 cache created successfully");
+    return C;
   }
     
   nblocks = size *1024 / blocksize ;// number of blocks in the cache
@@ -90,43 +90,75 @@ int updateLRU(struct cache_t *cp ,int index, int way)
 
 int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, int access_type)
 {
-  printf("\nAccess the cache... ");
-  printf("Address: %lu", address);
-  printf("  Access_type: %d", access_type);
+  // printf("\nAccess the cache... ");
+  // printf("Address: %lu", address);
+  // printf("  Access_type: %d", access_type);
   int i,latency ;
+  //L1
   int block_address ;
   int index ;
   int tag ;
+  //L2
+  int L2_block_address;
+  int L2_index;
+  int L2_tag;
+
   int way ;
   int max ;
 
   block_address = (address / L1->blocksize);
   tag = block_address / L1->nsets;
   index = block_address - (tag * L1->nsets) ;
-  // printf(" block_address %d", block_address);
+  // printf(" \nblock_address %d", block_address);
   // printf(" tag %d", tag);
   // printf(" index %d", index);
+
+  if(L2->size != 0){
+    L2_block_address = (address / L2->blocksize);
+    L2_tag = L2_block_address / L2->nsets;
+    L2_index = L2_block_address - (L2_tag * L2->nsets) ;
+
+    printf(" \nL2_block_address %d", L2_block_address);
+    printf(" L2_tag %d", L2_tag);
+    printf(" L2_index %d", L2_index);
+  }
 
   latency = 0;
   for (i = 0; i < L1->assoc; i++) { /* look for the requested block */
     if (L1->blocks[index][i].tag == tag && L1->blocks[index][i].valid == 1) {
-      updateLRU(L1, index, i) ;
+      updateLRU(L1, index, i);
       if (access_type == 1){ //write
         L1->blocks[index][i].dirty = 1;
       }
-      printf("\na cache hit");
-      printf(" at index %d with tag %d",  index, tag);
+      // printf("\nan L1 cache hit");
+      // printf(" at index %d with tag %d",  index, tag);
       return(latency);          /* a cache hit */
     }
   }
 
   /* a cache miss */
-  printf("\na cache miss");
-  printf(" at index %d with tag %d",  index, tag);
+  // printf("\nan L1 cache miss");
+  // printf(" at index %d with tag %d",  index, tag);
   for (way=0 ; way< L1->assoc ; way++){  /* look for an invalid entry */
       if (L1->blocks[index][way].valid == 0) {
         latency = latency + L1->mem_latency;  /* account for reading the block from memory*/
                     /* should instead read from L2, in case you have an L2 */
+
+      	//---------------------------------------------------------
+        //TODO: SEE IF THIS IS CORRECT
+      	// if(L2->blocks[index][way].valid == 0){
+      	// 	//check the L2 cache
+      	// 	latency = latency + L2->mem_latency;
+      	// 	L2->blocks[L2_index][way].valid = 1;
+      	// 	L2->blocks[L2_index][way].tag = tag;
+      	// 	updateLRU(L2, L2_index, way); //do we need this???
+      	// 	if(access_type == 1){
+      	// 		L2->blocks[L2_index][way].dirty = 1;
+      	// 	}
+      	// 	printf("\n\tan invalid L2 entry is available");
+      	// }
+      	//---------------------------------------------------------
+
         L1->blocks[index][way].valid = 1 ;
         L1->blocks[index][way].tag = tag ;
         updateLRU(L1, index, way); 
@@ -134,7 +166,7 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
         if(access_type == 1) { //write
           L1->blocks[index][way].dirty = 1;
         }
-        printf("\n\tan invalid entry is available");
+        // printf("\n\tan invalid L1 entry is available");
         return(latency);        /* an invalid entry is available*/
       }
   }
@@ -152,6 +184,7 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
   } 
   latency = latency + L1->mem_latency;    /* for reading the block from memory*/
       /* should instead write to and/or read from L2, in case you have an L2 */
+  //TODO: FIGURE OUT WHAT NEEDS TO GO HERE
   L1->blocks[index][way].tag = tag ;
   updateLRU(L1, index, way) ;
   L1->blocks[index][i].dirty = 0 ;
