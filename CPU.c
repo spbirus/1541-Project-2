@@ -305,7 +305,6 @@ int main(int argc, char **argv)
   data_cache = cache_L1_create(D_size, bsize, D_assoc, mem_time); //don't know if mem_time is the right variable to throw in here
   //create the unified L2 cache
   L2_cache = cache_L2_create(L2_size, bsize, L2_assoc, L2_latency);
-  printf("\nWe made the caches now\n");
  
 
   //loop while there are still instructions left
