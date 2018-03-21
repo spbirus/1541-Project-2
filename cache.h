@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+extern unsigned int L2_accesses;
+extern unsigned int L2_misses;
+extern unsigned int L2_hits;
+
 struct cache_blk_t { // note that no actual data will be stored in the cache 
   unsigned long tag;
   char valid;
@@ -47,7 +51,7 @@ struct cache_t * cache_L1_create(int size, int blocksize, int assoc, int mem_lat
 
 
 struct cache_t * cache_L2_create(int size, int blocksize, int assoc, int mem_latency){
-  printf("\nCreate the L2 cache ");
+  printf("\nCreate the L2 cache... ");
   printf("Cache size: %dKB ", size);
   printf("Blocksize: %dB ", blocksize);
   printf("Associativity: %d ", assoc);
@@ -155,6 +159,8 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
       	//---------------------------------------------------------
         //TODO: SEE IF THIS IS CORRECT
         if(L2->nsets != 0){
+			
+			L2_accesses++;
 
         	for (i = 0; i < L2->assoc; i++) { /* look for the requested block in L2 */
 			    if (L2->blocks[L2_index][i].tag == tag && L2->blocks[L2_index][i].valid == 1) {
@@ -162,20 +168,25 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 			    	if (access_type == 1){ //write
 			        	L2->blocks[L2_index][i].dirty = 1;
 			    	}
-			    	printf("\nan L2 cache hit");
-			    	printf(" at index %d with tag %d",  index, tag);
+			    	//printf("\nan L2 cache hit");
+			    	//printf(" at index %d with tag %d",  index, tag);
+					L2_hits++;
 			    	return(latency);          /* an L2 cache hit */
 				}
 			}
 
 			//a L2 cache miss
-			printf("\nan L2 cache miss");
+			//printf("\nan L2 cache miss");
+			L2_misses++;
 	      	if(L2->blocks[index][way].valid == 0){
 	      		//check the L2 cache
 	      		latency = latency + L2->mem_latency;
 	      		L2->blocks[L2_index][way].valid = 1;
 	      		L2->blocks[L2_index][way].tag = tag;
-	      		updateLRU(L2, L2_index, way); //do we need this???
+	      		updateLRU(L2, L2_index, way); //do we need this??? 
+										//I can't think of why we wouldn't need it
+										//also are we ever having a result of a hit or miss
+										//on L2 cache cause something to happen in L1?
 	      		if(access_type == 1){
 	      			L2->blocks[L2_index][way].dirty = 1;
 	      		}
@@ -183,26 +194,28 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 	      		return(latency);
 	      	}
 
-			// max = L2->blocks[L2_index][0].LRU; //find the LRU block
-			// way = 0;
-			// for(i = 1; i<L2->assoc; i++){
-			// 	if(L2->blocks[L2_index][i].LRU > max){
-			// 		max = L2->blocks[L2_index][i].LRU;
-			// 		way = i;
-			// 	}
-			// }
-			// printf("\n way %d", way);
-			// if (L2->blocks[L2_index][way].dirty == 1){ 
-			//     latency = latency + L2->mem_latency; /* for writing back the evicted block */
-			// } 
-			// latency = latency + L2->mem_latency;    /* for reading the block from memory*/
-			// L2->blocks[L2_index][way].tag = tag ;
-			// updateLRU(L2, L2_index, way) ;
-			// L2->blocks[L2_index][i].dirty = 0 ;
-			// if(access_type == 1) { //write
-			//     L2->blocks[L2_index][i].dirty = 1 ;
-			// }
-			// return(latency);
+			//L2 cache miss but no empty spots
+			
+			max = L2->blocks[L2_index][0].LRU; //find the LRU block
+			way = 0;
+			for(i = 1; i<L2->assoc; i++){
+				if(L2->blocks[L2_index][i].LRU > max){
+					max = L2->blocks[L2_index][i].LRU;
+					way = i;
+				}
+			}
+			printf("\n way %d", way);
+			if (L2->blocks[L2_index][way].dirty == 1){ 
+			    latency = latency + L2->mem_latency; /* for writing back the evicted block */
+			} 
+			latency = latency + L2->mem_latency;    /* for reading the block from memory*/
+			L2->blocks[L2_index][way].tag = tag ;
+			updateLRU(L2, L2_index, way) ;
+			L2->blocks[L2_index][i].dirty = 0 ;
+			if(access_type == 1) { //write
+			    L2->blocks[L2_index][i].dirty = 1 ;
+			}
+			return(latency);
 	    }
 	    
 
