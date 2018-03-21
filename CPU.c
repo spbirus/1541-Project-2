@@ -20,9 +20,6 @@ unsigned int D_read_misses = 0;
 unsigned int D_write_accesses = 0; 
 unsigned int D_write_misses = 0;
 unsigned int D_hits = 0;
-unsigned int L2_accesses = 0;
-unsigned int L2_misses = 0;
-unsigned int L2_hits = 0;
 
 #define BP_ENTRIES 64     // size of branch predictor table
 
