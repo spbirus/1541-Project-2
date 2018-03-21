@@ -5,6 +5,7 @@
 unsigned int L2_accesses = 0;
 unsigned int L2_misses = 0;
 unsigned int L2_hits = 0;
+unsigned int cycle_number = 0;
 
 struct cache_blk_t { // note that no actual data will be stored in the cache 
   unsigned long tag;
@@ -155,8 +156,10 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
       if (L1->blocks[index][way].valid == 0) {
       	if(L2->nsets == 0){
 			latency = latency + L1->mem_latency;  /* account for reading the block from memory*/
+			cycle_number += latency;
       	}else{
       		latency = latency + L2->mem_latency;  /* account for reading the block from L2*/
+			cycle_number += latency;
       	}
 
         L1->blocks[index][way].valid = 1 ;
@@ -213,8 +216,10 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 			//printf("\n way %d", way);
 			if (L2->blocks[L2_index][way].dirty == 1){ 
 			    latency = latency + L2->mem_latency; /* for writing back the evicted block */
+				cycle_number += latency;
 			} 
 			latency = latency + L1->mem_latency; //weird, but this should read the block from mem and add the mem latency which is in L1
+			cycle_number += latency;
 			L2->blocks[L2_index][way].tag = tag ;
 			updateLRU(L2, L2_index, way) ;
 			L2->blocks[L2_index][i].dirty = 0 ;
@@ -243,8 +248,10 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
   }
   if (L1->blocks[index][way].dirty == 1){ 
     latency = latency + L1->mem_latency; /* for writing back the evicted block */
+				cycle_number += latency;
   } 
   latency = latency + L1->mem_latency;    /* for reading the block from memory*/
+  cycle_number += latency;
       /* should instead write to and/or read from L2, in case you have an L2 */
   L1->blocks[index][way].tag = tag ;
   updateLRU(L1, index, way) ;

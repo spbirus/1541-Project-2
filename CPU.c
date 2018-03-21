@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include "CPU.h" 
 #include "cache.h"
+#include <time.h>
 
 // to keep cache statistics
 unsigned int I_accesses = 0;
@@ -195,11 +196,16 @@ void set_instr_to_noop(struct trace_item* instruction){
 
 int main(int argc, char **argv)
 {
+	
+	clock_t start, end;
+	double cpu_time_used;
+	
+	start = clock();
   
   int branch_prediction_method = 0;
   char *trace_file_name;
   int trace_view_on = 0;
-  unsigned int cycle_number = 0;
+  //unsigned int cycle_number = 0;
   
   unsigned char t_type = 0;
   unsigned char t_sReg_a= 0;
@@ -625,6 +631,12 @@ int main(int argc, char **argv)
   //   }
 
   trace_uninit();
+  
+  end = clock();
+  cpu_time_used = (double) (end - start)/ CLOCKS_PER_SEC;
+  printf("\nStart time: %f     ", start);
+  printf("End time: %f        ", end);
+  printf("\nTotal Execution Time: %f\n\n", cpu_time_used);
 
   exit(0);
 }
