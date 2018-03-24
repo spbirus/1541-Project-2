@@ -606,8 +606,8 @@ int main(int argc, char **argv)
   
   end = clock();
   cpu_time_used = (double) (end - start)/ CLOCKS_PER_SEC;
-  printf("\nStart time: %f     ", start);
-  printf("End time: %f        ", end);
+  // printf("\nStart time: %f     ", start);
+  // printf("End time: %f        ", end);
   printf("\nTotal Execution Time: %f\n\n", cpu_time_used);
 
   exit(0);
