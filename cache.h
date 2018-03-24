@@ -203,8 +203,8 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 			    	  if (access_type == 1){ //write
 			        	L2->blocks[L2_index][i].dirty = 1;
 			    	  }
-			    	  printf("\nan L2 cache hit");
-			    	  printf(" at index %d with tag %d",  L2_index, L2_tag);
+			    	  //printf("\nan L2 cache hit");
+			    	  //printf(" at index %d with tag %d",  L2_index, L2_tag);
 			    	  L2_hits++;
 			    	  return(latency);          /* an L2 cache hit */
 				  }
@@ -214,7 +214,7 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 
 
 			    //a L2 cache miss
-			    printf("\nan L2 cache miss");
+			   // printf("\nan L2 cache miss");
 	        L2_misses++;
 			for(way = 0; way < L2->assoc; way++){
 	            if(L2->blocks[L2_index][way].valid == 0){
@@ -225,8 +225,8 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 	              if(access_type == 1){
 	                L2->blocks[L2_index][way].dirty = 1;
 	              }
-	              printf("\n\tan invalid L2 entry is available");
-	              printf("\n\tL2_index %d  L2_tag %d",L2_index, L2_tag);
+	              //printf("\n\tan invalid L2 entry is available");
+	              //printf("\n\tL2_index %d  L2_tag %d",L2_index, L2_tag);
 	              return(latency);
 	            }
 	        }
@@ -235,7 +235,7 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 
 
 	      	//no invalid cache block available
-          	printf("\n\tno invalid L2 entry available");
+          	//printf("\n\tno invalid L2 entry available");
 	      	max = L2->blocks[L2_index][0].LRU; //find the LRU block
 			    way = 0;
 			    for(i = 1; i<L2->assoc; i++){
@@ -245,7 +245,7 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 					    way = i;
 				    }
 			    }
-         		printf("\n\t evict block L2index %d way %d", L2_index, way);
+         		//printf("\n\t evict block L2index %d way %d", L2_index, way);
 
     			//printf("\n way %d", way);
     			if (L2->blocks[L2_index][way].dirty == 1){ 
