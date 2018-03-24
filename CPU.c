@@ -205,7 +205,7 @@ int main(int argc, char **argv)
   int branch_prediction_method = 0;
   char *trace_file_name;
   int trace_view_on = 0;
-  //unsigned int cycle_number = 0;
+  unsigned int cycle_number = 0;
   
   unsigned char t_type = 0;
   unsigned char t_sReg_a= 0;
@@ -449,13 +449,6 @@ int main(int argc, char **argv)
       //miss -> latency value varies based on memory (have to stall)
       if(latency > 0){
       	D_read_misses++; //increment the data read misses when the latency is anything greater than 0
-      	int i;
-      	for( i = 0; i<latency; i++) {
-      		//used to wait so many times while the data is fetching from memory or L2 cache
-          if(trace_view_on){
-          	printf("\nWaiting on reading data cache...");
-          }
-      	}
       }else{
         D_hits++;
       }
@@ -469,13 +462,6 @@ int main(int argc, char **argv)
       //miss -> latency value varies based on memory (have to stall)
       if(latency > 0){
         D_write_misses++; //increment the data read misses when the latency is anything greater than 0
-        int i;
-        for( i = 0; i<latency; i++) {
-          //used to wait so many times while the data is fetching from memory or L2 cache
-          if(trace_view_on){
-            printf("\nWaiting on writing data cache...");
-          }
-        }
       }else{
         D_hits++;
       }
@@ -496,27 +482,20 @@ int main(int argc, char **argv)
   	switch(hazard){
   		case 0: //no hazard
 
-  			//-------------------------------------------------------
-  			//check the L1 instruction cache
-  			latency = cache_access(instr_cache, L2_cache, new_instr->Addr, 0); 
-  						//TODO: when do we want to write vs. when do we want to read?? 
-  						//I think instr_cache is always read and data_cache will be read or write
-  			I_accesses++; //increment the instruction accesses
-        //hit -> latency = 0
-        //miss -> latency value varies based on memory (have to stall)
-        if(latency > 0){
-        	I_misses++; //increment the insctruction misses when the latency is anything greater than 0
-        	int i;
-        	for( i = 0; i<latency; i++) {
-        		//used to wait so many times while the instruction is fetching from memory or L2 cache
-	            if(trace_view_on){
-	              printf("\nWaiting on instruction cache...");
-	            }
-        	}
-        }else{
-          I_hits++;
-        }
-        //-------------------------------------------------------
+			//-------------------------------------------------------
+			//check the L1 instruction cache
+			latency = cache_access(instr_cache, L2_cache, new_instr->Addr, 0); 
+						//TODO: when do we want to write vs. when do we want to read?? 
+						//I think instr_cache is always read and data_cache will be read or write
+			I_accesses++; //increment the instruction accesses
+	        //hit -> latency = 0
+	        //miss -> latency value varies based on memory (have to stall)
+	        if(latency > 0){
+	        	I_misses++; //increment the insctruction misses when the latency is anything greater than 0
+	        }else{
+	          I_hits++;
+	        }
+	        //-------------------------------------------------------
 
             
   			ex_stage = id_stage;
@@ -564,13 +543,6 @@ int main(int argc, char **argv)
 	            //maybe use a while loop with repeated print("waiting") statements
 	        if(latency > 0){
 	        	I_misses++; //increment the insctruction misses when the latency is anything greater than 0
-	        	int i;
-	        	for( i = 0; i<latency; i++) {
-	        		//used to wait so many times while the instruction is fetching from memory or L2 cache
-		            if(trace_view_on){
-		              printf("\nWaiting on instruction cache...");
-		            }
-	        	}
 	        }else{
             I_hits++;
           }

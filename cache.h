@@ -5,7 +5,6 @@
 unsigned int L2_accesses = 0;
 unsigned int L2_misses = 0;
 unsigned int L2_hits = 0;
-unsigned int cycle_number = 0;
 
 struct cache_blk_t { // note that no actual data will be stored in the cache 
   unsigned long tag;
@@ -155,11 +154,9 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
   for (way=0 ; way < L1->assoc ; way++){  /* look for an invalid entry */
       if (L1->blocks[index][way].valid == 0) {
       	if(L2->nsets == 0){
-			    latency = latency + L1->mem_latency;  /* account for reading the block from memory*/
-          cycle_number += latency;
+			latency = latency + L1->mem_latency;  /* account for reading the block from memory*/
       	}else{
       		latency = latency + L2->mem_latency;  /* account for reading the block from L2*/
-          cycle_number += latency;
       	}
 
         L1->blocks[index][way].valid = 1 ;
@@ -170,80 +167,10 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
           L1->blocks[index][way].dirty = 1;
         }
         
-        //---------------------------------------------------------
-        //look in L2
-        if(L2->nsets != 0){
-        	L2_accesses++;
-        	for (i = 0; i < L2->assoc; i++) { /* look for the requested block in L2 */
-            //printf("\n\tL2 block: L2_index %d  i %d  L2_tag %d", L2_index, i, L2_tag);
-			      if (L2->blocks[L2_index][i].tag == tag && L2->blocks[L2_index][i].valid == 1) {
-			    	  updateLRU(L2, L2_index, i);
-			    	  if (access_type == 1){ //write
-			        	L2->blocks[L2_index][i].dirty = 1;
-			    	  }
-			    	  printf("\nan L2 cache hit");
-			    	  printf(" at index %d with tag %d",  L2_index, L2_tag);
-			    	  L2_hits++;
-			    	  return(latency);          /* an L2 cache hit */
-				    }
-			    }
-
-
-
-
-			    //a L2 cache miss
-			    printf("\nan L2 cache miss");
-          L2_misses++;
-			    for(way = 0; way < L2->assoc; way++){
-            if(L2->blocks[L2_index][way].valid == 0){
-              //check the L2 cache
-              L2->blocks[L2_index][way].valid = 1;
-              L2->blocks[L2_index][way].tag = tag;
-              updateLRU(L2, L2_index, way); //do we need this??? I think so
-              if(access_type == 1){
-                L2->blocks[L2_index][way].dirty = 1;
-              }
-              printf("\n\tan invalid L2 entry is available");
-              printf("\n\tL2_index %d  L2_tag %d",L2_index, L2_tag);
-              return(latency);
-            }
-          }
-
-
-
-
-	      	//no invalid cache block available
-          printf("\n\tno invalid L2 entry available");
-	      	max = L2->blocks[L2_index][0].LRU; //find the LRU block
-			    way = 0;
-			    for(i = 1; i<L2->assoc; i++){
-            printf("\n\tL2 block: L2_index %d  i %d  L2_tag %d", L2_index, i, L2_tag);
-				    if(L2->blocks[L2_index][i].LRU > max && L1->blocks[index][i].valid != 1){ //check that L2 is inclusive. Check that evicting L2 doesn't evict something in L1
-              max = L2->blocks[L2_index][i].LRU;
-					    way = i;
-				    }
-			    }
-          printf("\n\t evict block L2index %d way %d", L2_index, way);
-
-    			//printf("\n way %d", way);
-    			if (L2->blocks[L2_index][way].dirty == 1){ 
-    			  latency = latency + L2->mem_latency; /* for writing back the evicted block */
-            cycle_number += latency;
-    			} 
-    			latency = latency + L1->mem_latency; //weird, but this should read the block from mem and add the mem latency which is in L1
-          cycle_number += latency;
-    			L2->blocks[L2_index][way].tag = tag ;
-    			updateLRU(L2, L2_index, way) ;
-    			L2->blocks[L2_index][way].dirty = 0 ;
-    			if(access_type == 1) { //write
-    			    L2->blocks[L2_index][way].dirty = 1 ;
-    			}
-    			return(latency);
-    		//---------------------------------------------------------
-    		}else{
+        if(L2->nsets == 0){
           //no L2
-    			return(latency);        /* an invalid L1 entry is available*/
-    		}
+    		return(latency);        /* an invalid L1 entry is available*/
+    	}
       }
   }
 
@@ -264,6 +191,78 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
   } 
   latency = latency + L1->mem_latency;    /* for reading the block from memory*/
       /* should instead write to and/or read from L2, in case you have an L2 */
+
+  //---------------------------------------------------------
+        //look in L2
+        if(L2->nsets != 0){
+        	L2_accesses++;
+        	for (i = 0; i < L2->assoc; i++) { /* look for the requested block in L2 */
+            //printf("\n\tL2 block: L2_index %d  i %d  L2_tag %d", L2_index, i, L2_tag);
+			      if (L2->blocks[L2_index][i].tag == tag && L2->blocks[L2_index][i].valid == 1) {
+			    	  updateLRU(L2, L2_index, i);
+			    	  if (access_type == 1){ //write
+			        	L2->blocks[L2_index][i].dirty = 1;
+			    	  }
+			    	  printf("\nan L2 cache hit");
+			    	  printf(" at index %d with tag %d",  L2_index, L2_tag);
+			    	  L2_hits++;
+			    	  return(latency);          /* an L2 cache hit */
+				  }
+			}
+
+
+
+
+			    //a L2 cache miss
+			    printf("\nan L2 cache miss");
+	        L2_misses++;
+			for(way = 0; way < L2->assoc; way++){
+	            if(L2->blocks[L2_index][way].valid == 0){
+	              //check the L2 cache
+	              L2->blocks[L2_index][way].valid = 1;
+	              L2->blocks[L2_index][way].tag = tag;
+	              updateLRU(L2, L2_index, way); //do we need this??? I think so
+	              if(access_type == 1){
+	                L2->blocks[L2_index][way].dirty = 1;
+	              }
+	              printf("\n\tan invalid L2 entry is available");
+	              printf("\n\tL2_index %d  L2_tag %d",L2_index, L2_tag);
+	              return(latency);
+	            }
+	        }
+
+
+
+
+	      	//no invalid cache block available
+          	printf("\n\tno invalid L2 entry available");
+	      	max = L2->blocks[L2_index][0].LRU; //find the LRU block
+			    way = 0;
+			    for(i = 1; i<L2->assoc; i++){
+            		//printf("\n\tL2 block: L2_index %d  i %d  L2_tag %d", L2_index, i, L2_tag);
+				    if(L2->blocks[L2_index][i].LRU > max && L1->blocks[index][i].valid != 1){ //check that L2 is inclusive. Check that evicting L2 doesn't evict something in L1
+              			max = L2->blocks[L2_index][i].LRU;
+					    way = i;
+				    }
+			    }
+         		printf("\n\t evict block L2index %d way %d", L2_index, way);
+
+    			//printf("\n way %d", way);
+    			if (L2->blocks[L2_index][way].dirty == 1){ 
+    			    latency = latency + L2->mem_latency; /* for writing back the evicted block */
+    			} 
+    			latency = latency + L1->mem_latency; //weird, but this should read the block from mem and add the mem latency which is in L1
+    			L2->blocks[L2_index][way].tag = tag ;
+    			updateLRU(L2, L2_index, way) ;
+    			L2->blocks[L2_index][way].dirty = 0 ;
+    			if(access_type == 1) { //write
+    			    L2->blocks[L2_index][way].dirty = 1 ;
+    			}
+    			return(latency);
+    		
+    		}
+//---------------------------------------------------------
+
 
   L1->blocks[index][way].tag = tag ;
   updateLRU(L1, index, way) ;
