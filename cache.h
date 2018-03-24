@@ -169,7 +169,7 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
         
         if(L2->nsets == 0){
           //no L2
-    		return(latency);        /* an invalid L1 entry is available*/
+    	  return(latency);        /* an invalid L1 entry is available*/
     	}
       }
   }
@@ -190,6 +190,13 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
     latency = latency + L1->mem_latency; /* for writing back the evicted block */
   } 
   latency = latency + L1->mem_latency;    /* for reading the block from memory*/
+
+    L1->blocks[index][way].tag = tag ;
+  updateLRU(L1, index, way) ;
+  L1->blocks[index][way].dirty = 0 ;
+  if(access_type == 1) { //write
+    L1->blocks[index][way].dirty = 1 ;
+  }
       /* should instead write to and/or read from L2, in case you have an L2 */
 
   //---------------------------------------------------------
@@ -264,11 +271,6 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 //---------------------------------------------------------
 
 
-  L1->blocks[index][way].tag = tag ;
-  updateLRU(L1, index, way) ;
-  L1->blocks[index][way].dirty = 0 ;
-  if(access_type == 1) { //write
-    L1->blocks[index][way].dirty = 1 ;
-  }
+
   return(latency);
 }
