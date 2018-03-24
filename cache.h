@@ -5,7 +5,7 @@
 unsigned int L2_accesses = 0;
 unsigned int L2_misses = 0;
 unsigned int L2_hits = 0;
-extern unsigned int cycle_number;
+unsigned int cycle_number;
 
 struct cache_blk_t { // note that no actual data will be stored in the cache 
   unsigned long tag;
