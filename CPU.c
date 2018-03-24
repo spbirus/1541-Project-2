@@ -441,8 +441,6 @@ int main(int argc, char **argv)
     //check the L1 data cache
     if(mem1_stage->type == ti_LOAD){
       //Loading == reading??
-      //printf("\nDATA CACHE READING\n");
-      //print_finished_instr(mem1_stage, 0);
       latency = cache_access(data_cache, L2_cache, mem1_stage->Addr, 0); 
   	  D_read_accesses++; //increment the data read accesses
       //hit -> latency = 0
@@ -454,9 +452,7 @@ int main(int argc, char **argv)
       }
     }else if(mem1_stage->type == ti_STORE){
       //Storing == writing??
-      //printf("\nDATA CACHE WRITING\n");
-      //print_finished_instr(mem1_stage, 0);
-      latency = cache_access(data_cache, L2_cache, mem1_stage->Addr, 1); //not sure if we need dReg or something else
+      latency = cache_access(data_cache, L2_cache, mem1_stage->Addr, 1); 
       D_write_accesses++; //increment the data read accesses
       //hit -> latency = 0
       //miss -> latency value varies based on memory (have to stall)
@@ -482,12 +478,12 @@ int main(int argc, char **argv)
   	switch(hazard){
   		case 0: //no hazard
 
-			//-------------------------------------------------------
-			//check the L1 instruction cache
-			latency = cache_access(instr_cache, L2_cache, new_instr->Addr, 0); 
+			     //-------------------------------------------------------
+			     //check the L1 instruction cache
+			     latency = cache_access(instr_cache, L2_cache, new_instr->Addr, 0); 
 						//TODO: when do we want to write vs. when do we want to read?? 
 						//I think instr_cache is always read and data_cache will be read or write
-			I_accesses++; //increment the instruction accesses
+			     I_accesses++; //increment the instruction accesses
 	        //hit -> latency = 0
 	        //miss -> latency value varies based on memory (have to stall)
 	        if(latency > 0){

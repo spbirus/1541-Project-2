@@ -140,8 +140,8 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
       if (access_type == 1){ //write
         L1->blocks[index][i].dirty = 1;
       }
-      // printf("\nan L1 cache hit");
-      // printf(" at index %d with tag %d",  index, tag);
+       //printf("\nan L1 cache hit");
+       //printf(" at index %d with tag %d way %d",  index, tag, i);
       return(latency);          /* a L1 cache hit */
     }
   }
@@ -150,7 +150,7 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 
 
   /* a cache miss */
-  // printf("\nan L1 cache miss");
+   //printf("\nan L1 cache miss");
   // printf(" at index %d with tag %d",  index, tag);
   for (way=0 ; way < L1->assoc ; way++){  /* look for an invalid entry */
       if (L1->blocks[index][way].valid == 0) {
@@ -169,6 +169,8 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
         if(access_type == 1) { //write
           L1->blocks[index][way].dirty = 1;
         }
+        //printf("\n\tan invalid L1 entry is available");
+	    //printf("\n\tindex %d  tag %d way %d",index, tag, way);
         
         if(L2->nsets == 0){
           //no L2
@@ -181,10 +183,12 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 
 
   //cache miss but no empty spots
+   // printf("\n\tno invalid L2 entry available");
   max = L1->blocks[index][0].LRU ;  /* find the LRU block */
   way = 0 ;
   for (i=1 ; i< L1->assoc ; i++){
     if (L1->blocks[index][i].LRU > max) {
+      //printf("\n\tL1 block: L1_index %d  i %d  L1_tag %d", index, i, tag);
       max = L1->blocks[index][i].LRU ;
       way = i ;
     }
