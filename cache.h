@@ -170,12 +170,12 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
           L1->blocks[index][way].dirty = 1;
         }
         //printf("\n\tan invalid L1 entry is available");
-	    //printf("\n\tindex %d  tag %d way %d",index, tag, way);
+	      //printf("\n\tindex %d  tag %d way %d",index, tag, way);
         
         if(L2->nsets == 0){
           //no L2
-    	  return(latency);        /* an invalid L1 entry is available*/
-    	}
+    	    return(latency);        /* an invalid L1 entry is available*/
+    	  }
       }
   }
 
@@ -183,7 +183,7 @@ int cache_access(struct cache_t *L1, struct cache_t *L2, unsigned long address, 
 
 
   //cache miss but no empty spots
-   // printf("\n\tno invalid L2 entry available");
+  //printf("\n\tno invalid L2 entry available");
   max = L1->blocks[index][0].LRU ;  /* find the LRU block */
   way = 0 ;
   for (i=1 ; i< L1->assoc ; i++){
